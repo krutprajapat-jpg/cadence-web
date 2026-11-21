@@ -106,6 +106,109 @@
       color: var(--accent-text);
     }
 
+    /* Daddy & Sub Segmented Toggles */
+    .daddy-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .daddy-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.88rem;
+      padding: 9px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .daddy-btn.active {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .sub-toggle-wrap {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 8px;
+      margin-bottom: 12px;
+    }
+
+    .sub-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      padding-left: 2px;
+    }
+
+    .sub-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .sub-btn {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 8px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .sub-btn.active {
+      background: #E4E4E7;
+      color: #09090B;
+      border-color: #E4E4E7;
+    }
+
+    .outcome-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 10px;
+    }
+
+    .outcome-btn {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.88rem;
+      padding: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .outcome-btn.win.active {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .outcome-btn.loss.active {
+      background: var(--danger);
+      color: #FFFFFF;
+      border-color: var(--danger);
+    }
+
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -237,6 +340,16 @@
       border-color: var(--accent);
     }
 
+    .badge-win {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .badge-loss {
+      color: var(--danger);
+      font-weight: 800;
+    }
+
     .muted {
       color: var(--muted);
       font-size: 0.8rem;
@@ -250,6 +363,7 @@
       border-radius: 12px;
       font-size: 0.84rem;
       margin-top: 8px;
+      margin-bottom: 8px;
     }
 
     .success {
@@ -260,6 +374,7 @@
       border-radius: 12px;
       font-size: 0.84rem;
       margin-top: 8px;
+      margin-bottom: 8px;
     }
 
     .metric-box {
@@ -333,14 +448,6 @@
       margin-top: 4px;
       white-space: nowrap;
     }
-
-    .switch-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 10px 0;
-      font-size: 0.88rem;
-    }
   </style>
 </head>
 <body>
@@ -356,12 +463,14 @@
       store: { players: {}, teams: {}, active_team: null },
       loggedPlayer: localStorage.getItem("cadence_logged_player") || null,
       draftName: "",
+      authMode: "signin", // "signin" | "signup"
       forceLogin: false,
       tab: "Team",
       teamSubView: "home",
       selectedMember: null,
-      playerSec: "Rank",
-      rankMode: "Clash Squad",
+      playerSec: "Rank", // Daddy toggle: "Rank" | "Training"
+      rankMode: "Clash Squad", // Sub-toggle under Rank: "Clash Squad" | "Battle Royale"
+      matchResult: "win", // "win" | "loss"
       graphRange: "Date-wise",
       graphMetric: "Kills",
       authRole: ROLES[0],
@@ -483,6 +592,19 @@
       }
     }
 
+    async function syncStoreNow(successMsg = null) {
+      try {
+        await saveToSupabase(state.store);
+        if (successMsg) {
+          setFeedback({ message: successMsg });
+          render();
+        }
+      } catch (err) {
+        setFeedback({ error: `Cloud sync issue: ${err.message}` });
+        render();
+      }
+    }
+
     function playerSummary(player) {
       const st = player.stats || defaultStats();
       const cs = (st.rank?.clash_squad || []).reduce((s, x) => s + Number(x.kills || 0), 0);
@@ -549,25 +671,30 @@
         html += `<div class="success">${escapeHtml(state.message)}</div>`;
       }
 
+      // CLEAN SEPARATE SIGN IN / SIGN UP VIEW
       if (!loggedPlayer || state.forceLogin) {
-        html += `<div class="card"><h3 class="section-title">Player Login</h3>`;
+        html += `<div class="card">`;
+        html += `<div class="daddy-toggle">
+          <button type="button" class="daddy-btn ${state.authMode === "signin" ? "active" : ""}" data-auth-mode="signin">Sign In</button>
+          <button type="button" class="daddy-btn ${state.authMode === "signup" ? "active" : ""}" data-auth-mode="signup">Sign Up</button>
+        </div>`;
+
         html += `<label>Player Name</label><input id="loginName" type="text" autocomplete="off" value="${escapeHtml(state.draftName)}" placeholder="Enter player name" />`;
 
-        html += `<label>Role (for new account)</label><div class="pill-group">`;
-        ROLES.forEach(r => {
-          const active = state.authRole === r ? "active" : "";
-          html += `<button type="button" class="choice-pill ${active}" data-auth-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`;
-        });
-        html += `</div>`;
-
-        html += `<label>Password</label><input id="loginPwd" type="password" autocomplete="off" placeholder="Enter password (for existing player)" />`;
-        html += `<button type="button" class="btn btn-primary" id="btnLogin">Login</button>`;
-
-        html += `<hr style="border:0;border-top:1px solid var(--border);margin:14px 0;" />`;
-        html += `<div class="muted" style="margin-bottom:4px;">New player? Create account below:</div>`;
-        html += `<label>Create Password</label><input id="regPwd1" type="password" autocomplete="new-password" placeholder="At least 4 characters" />`;
-        html += `<label>Confirm Password</label><input id="regPwd2" type="password" autocomplete="new-password" placeholder="Re-enter password" />`;
-        html += `<button type="button" class="btn" id="btnRegister">Create Account & Continue</button>`;
+        if (state.authMode === "signin") {
+          html += `<label>Password</label><input id="loginPwd" type="password" autocomplete="current-password" placeholder="Enter your password" />`;
+          html += `<button type="button" class="btn btn-primary" id="btnLogin">Sign In</button>`;
+        } else {
+          html += `<label>Select Role</label><div class="pill-group">`;
+          ROLES.forEach(r => {
+            const active = state.authRole === r ? "active" : "";
+            html += `<button type="button" class="choice-pill ${active}" data-auth-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`;
+          });
+          html += `</div>`;
+          html += `<label>Create Password</label><input id="regPwd1" type="password" autocomplete="new-password" placeholder="At least 4 characters" />`;
+          html += `<label>Confirm Password</label><input id="regPwd2" type="password" autocomplete="new-password" placeholder="Re-enter password" />`;
+          html += `<button type="button" class="btn btn-primary" id="btnRegister">Sign Up & Enter App</button>`;
+        }
 
         if (loggedPlayer) {
           html += `<button type="button" class="btn" id="btnCancelLogin">Cancel</button>`;
@@ -593,18 +720,22 @@
           html += `<div class="card">`;
           html += `<div class="section-title">${escapeHtml(target.player_name)} <span class="muted">(${escapeHtml(target.role)} • ${canEdit ? "Editable" : "View Only"})</span></div>`;
 
-          html += `<div class="pill-group">`;
+          // DADDY TOGGLE: Rank | Training
+          html += `<div class="daddy-toggle">`;
           ["Rank", "Training"].forEach(sec => {
-            html += `<button type="button" class="choice-pill ${state.playerSec === sec ? "active" : ""}" data-sec="${sec}">${sec}</button>`;
+            html += `<button type="button" class="daddy-btn ${state.playerSec === sec ? "active" : ""}" data-sec="${sec}">${sec}</button>`;
           });
           html += `</div>`;
 
           if (state.playerSec === "Rank") {
-            html += `<div class="pill-group">`;
+            // SUB-TOGGLE UNDER RANK: Clash Squad | Battle Royale
+            html += `<div class="sub-toggle-wrap">
+              <div class="sub-label">Rank Mode</div>
+              <div class="sub-toggle">`;
             ["Clash Squad", "Battle Royale"].forEach(m => {
-              html += `<button type="button" class="choice-pill ${state.rankMode === m ? "active" : ""}" data-rmode="${m}">${m}</button>`;
+              html += `<button type="button" class="sub-btn ${state.rankMode === m ? "active" : ""}" data-rmode="${m}">${m}</button>`;
             });
-            html += `</div>`;
+            html += `</div></div>`;
 
             const key = state.rankMode === "Clash Squad" ? "clash_squad" : "battle_royale";
             target.stats.rank[key] = target.stats.rank[key] || [];
@@ -612,19 +743,26 @@
             const totalKills = entries.reduce((s, x) => s + Number(x.kills || 0), 0);
             const pct = Math.min(100, Math.round((totalKills / Math.max(25, totalKills)) * 100));
 
-            html += `<div class="muted">Total Kills: ${totalKills}</div>`;
+            html += `<div class="muted">Total Kills (${escapeHtml(state.rankMode)}): ${totalKills}</div>`;
             html += `<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>`;
 
             if (canEdit) {
               const today = new Date().toISOString().slice(0, 10);
               html += `<label>Date</label><input id="rankDate" type="date" value="${today}" />`;
               html += `<label>Kills</label><input id="rankKills" type="number" min="0" value="0" />`;
-              html += `<div class="switch-row"><span>Won Match</span><input id="rankWon" type="checkbox" checked style="width:auto;transform:scale(1.25);" /></div>`;
+
+              // SEPARATE WIN & LOSS BUTTONS
+              html += `<label>Result</label><div class="outcome-grid">
+                <button type="button" class="outcome-btn win ${state.matchResult === "win" ? "active" : ""}" data-outcome="win">WIN</button>
+                <button type="button" class="outcome-btn loss ${state.matchResult === "loss" ? "active" : ""}" data-outcome="loss">LOSS</button>
+              </div>`;
+
               html += `<button type="button" class="btn btn-primary" id="saveRankMatch">Save Match</button>`;
             }
 
             entries.slice(-8).reverse().forEach(item => {
-              html += `<div class="row-item"><span>${escapeHtml(item.date)} • Kills: ${item.kills}</span><strong>${item.won ? "WIN" : "LOSS"}</strong></div>`;
+              const badgeClass = item.won ? "badge-win" : "badge-loss";
+              html += `<div class="row-item"><span>${escapeHtml(item.date)} • Kills: ${item.kills}</span><span class="${badgeClass}">${item.won ? "WIN" : "LOSS"}</span></div>`;
             });
           } else {
             const avgKd = recomputeAvgKd(target);
@@ -817,6 +955,16 @@
     }
 
     function bindEvents() {
+      document.querySelectorAll("[data-auth-mode]").forEach(btn => {
+        btn.onclick = () => {
+          const curName = document.getElementById("loginName");
+          if (curName) state.draftName = curName.value;
+          state.authMode = btn.dataset.authMode;
+          setFeedback({});
+          render();
+        };
+      });
+
       const loginNameInput = document.getElementById("loginName");
       if (loginNameInput) {
         loginNameInput.addEventListener("input", (e) => {
@@ -881,7 +1029,7 @@
             return;
           }
           if (state.store.players[name]?.auth) {
-            setFeedback({ error: "Player already exists. Use Login above." });
+            setFeedback({ error: "Player already exists. Switch to Sign In." });
             render();
             return;
           }
@@ -897,13 +1045,13 @@
           }
           const auth = await makeAuth(p1);
           const rec = ensurePlayer(name, state.authRole, auth.hash, auth.salt);
-          await saveToSupabase(state.store);
           state.loggedPlayer = rec.player_name;
           state.draftName = "";
           localStorage.setItem("cadence_logged_player", rec.player_name);
           state.forceLogin = false;
-          setFeedback({ message: "Account created!" });
+          setFeedback({ message: "Account created & signed in!" });
           render();
+          await syncStoreNow("Account created & signed in!");
         };
       }
 
@@ -941,7 +1089,10 @@
               invites_sent: []
             };
             state.store.active_team = tName;
-            await saveToSupabase(state.store);
+            state.teamSubView = "squad";
+            render();
+            await syncStoreNow();
+            return;
           }
           state.teamSubView = "squad";
           render();
@@ -952,8 +1103,8 @@
       if (switchTeamSelect) {
         switchTeamSelect.onchange = async () => {
           state.store.active_team = switchTeamSelect.value;
-          await saveToSupabase(state.store);
           render();
+          await syncStoreNow();
         };
       }
 
@@ -984,9 +1135,9 @@
             };
           }
           state.store.active_team = tName;
-          await saveToSupabase(state.store);
-          setFeedback({ message: "Team saved to cloud." });
+          setFeedback({ message: "Team saved." });
           render();
+          await syncStoreNow("Team saved.");
         };
       }
 
@@ -1017,9 +1168,9 @@
           };
           state.store.active_team = addName;
           state.showAddTeam = false;
-          await saveToSupabase(state.store);
           setFeedback({ message: `Created ${addName}.` });
           render();
+          await syncStoreNow(`Created ${addName}.`);
         };
       }
 
@@ -1036,6 +1187,7 @@
         el.onclick = () => {
           state.selectedMember = el.dataset.openMember;
           state.teamSubView = "player";
+          setFeedback({});
           render();
         };
       });
@@ -1068,9 +1220,9 @@
             team.members.push(mName);
           }
           state.showAddPlayer = false;
-          await saveToSupabase(state.store);
           setFeedback({ message: `${mName} added.` });
           render();
+          await syncStoreNow(`${mName} added.`);
         };
       }
 
@@ -1083,16 +1235,28 @@
         };
       }
 
+      // Daddy Toggle: Rank | Training
       document.querySelectorAll("[data-sec]").forEach(btn => {
         btn.onclick = () => {
           state.playerSec = btn.dataset.sec;
+          setFeedback({});
           render();
         };
       });
 
+      // Sub-Toggle: Clash Squad | Battle Royale
       document.querySelectorAll("[data-rmode]").forEach(btn => {
         btn.onclick = () => {
           state.rankMode = btn.dataset.rmode;
+          setFeedback({});
+          render();
+        };
+      });
+
+      // Separate Win / Loss Buttons
+      document.querySelectorAll("[data-outcome]").forEach(btn => {
+        btn.onclick = () => {
+          state.matchResult = btn.dataset.outcome;
           render();
         };
       });
@@ -1105,12 +1269,12 @@
           const key = state.rankMode === "Clash Squad" ? "clash_squad" : "battle_royale";
           const dateVal = document.getElementById("rankDate")?.value || new Date().toISOString().slice(0, 10);
           const killsVal = Math.max(0, parseInt(document.getElementById("rankKills")?.value || "0", 10));
-          const wonVal = Boolean(document.getElementById("rankWon")?.checked);
+          const wonVal = state.matchResult === "win";
           target.stats.rank[key] = target.stats.rank[key] || [];
           target.stats.rank[key].push({ date: dateVal, kills: killsVal, won: wonVal });
-          await saveToSupabase(state.store);
-          setFeedback({ message: "Match saved." });
+          setFeedback({ message: `Match saved (${wonVal ? "WIN" : "LOSS"}).` });
           render();
+          await syncStoreNow(`Match saved (${wonVal ? "WIN" : "LOSS"}).`);
         };
       }
 
@@ -1125,9 +1289,9 @@
           target.stats.training.logs = target.stats.training.logs || [];
           target.stats.training.logs.push({ date: dateVal, kd: kdVal, kills: killsVal });
           recomputeAvgKd(target);
-          await saveToSupabase(state.store);
           setFeedback({ message: "Training game saved." });
           render();
+          await syncStoreNow("Training game saved.");
         };
       }
 
@@ -1149,6 +1313,7 @@
       if (switchPlayerBtn) {
         switchPlayerBtn.onclick = () => {
           state.forceLogin = true;
+          state.authMode = "signin";
           state.draftName = "";
           setFeedback({});
           render();
@@ -1182,9 +1347,9 @@
           }
           player.auth = await makeAuth(newPwd);
           state.showChangePwd = false;
-          await saveToSupabase(state.store);
           setFeedback({ message: "Password updated." });
           render();
+          await syncStoreNow("Password updated.");
         };
       }
     }

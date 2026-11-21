@@ -106,7 +106,6 @@
       color: var(--accent-text);
     }
 
-    /* Daddy & Sub Segmented Toggles */
     .daddy-toggle {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -231,7 +230,7 @@
       border: none;
       border-radius: 999px;
       padding: 13px 16px;
-      font-size: 1rem;
+      font-size: 0.96rem;
       font-weight: 800;
       cursor: pointer;
       margin-bottom: 12px;
@@ -455,7 +454,7 @@
 
   <script>
     const SUPABASE_URL = "https://yaghdgrfuuehicfvukpu.supabase.co";
-    const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";
+    const SUPABASE_ANON_KEY = "sb_publishable_ufLOPq7AQWVmpFiffO9HFw_Jh_iT3uj";
 
     const ROLES = ["Primary Rusher", "Secondary Rusher", "Sniper", "Supporter"];
 
@@ -463,19 +462,21 @@
       store: { players: {}, teams: {}, active_team: null },
       loggedPlayer: localStorage.getItem("cadence_logged_player") || null,
       draftName: "",
-      authMode: "signin", // "signin" | "signup"
+      teamInputName: "",
+      joinCodeInput: "",
+      pendingJoinTeam: null,
+      authMode: "signin",
       forceLogin: false,
       tab: "Team",
       teamSubView: "home",
       selectedMember: null,
-      playerSec: "Rank", // Daddy toggle: "Rank" | "Training"
-      rankMode: "Clash Squad", // Sub-toggle under Rank: "Clash Squad" | "Battle Royale"
-      matchResult: "win", // "win" | "loss"
+      playerSec: "Rank",
+      rankMode: "Clash Squad",
+      matchResult: "win",
       graphRange: "Date-wise",
       graphMetric: "Kills",
       authRole: ROLES[0],
       showAddPlayer: false,
-      showAddTeam: false,
       showChangePwd: false,
       message: null,
       error: null,
@@ -530,6 +531,18 @@
       return state.store.players[clean];
     }
 
+    function generateTeamCode() {
+      const existingCodes = new Set(
+        Object.values(state.store.teams || {}).map(t => String(t.invite_code || ""))
+      );
+      let code = "";
+      do {
+        const num = Math.floor(1000 + Math.random() * 9000);
+        code = `CAD-${num}`;
+      } while (existingCodes.has(code));
+      return code;
+    }
+
     async function sha256Hex(text) {
       const enc = new TextEncoder().encode(text);
       const buf = await crypto.subtle.digest("SHA-256", enc);
@@ -572,6 +585,9 @@
       }
       data.players = data.players || {};
       data.teams = data.teams || {};
+      if (data.active_team && !Object.prototype.hasOwnProperty.call(data.teams, data.active_team)) {
+        data.active_team = null;
+      }
       Object.values(data.players).forEach(p => recomputeAvgKd(p));
       return data;
     }
@@ -632,13 +648,11 @@
 
     function getActiveTeam() {
       const teams = state.store.teams || {};
-      let name = state.store.active_team;
-      if (!teams[name]) {
-        const keys = Object.keys(teams);
-        name = keys.length ? keys[keys.length - 1] : null;
-        state.store.active_team = name;
+      const activeName = state.store.active_team;
+      if (activeName && Object.prototype.hasOwnProperty.call(teams, activeName)) {
+        return teams[activeName];
       }
-      return name ? teams[name] : null;
+      return null;
     }
 
     function render() {
@@ -671,7 +685,6 @@
         html += `<div class="success">${escapeHtml(state.message)}</div>`;
       }
 
-      // CLEAN SEPARATE SIGN IN / SIGN UP VIEW
       if (!loggedPlayer || state.forceLogin) {
         html += `<div class="card">`;
         html += `<div class="daddy-toggle">
@@ -720,7 +733,6 @@
           html += `<div class="card">`;
           html += `<div class="section-title">${escapeHtml(target.player_name)} <span class="muted">(${escapeHtml(target.role)} • ${canEdit ? "Editable" : "View Only"})</span></div>`;
 
-          // DADDY TOGGLE: Rank | Training
           html += `<div class="daddy-toggle">`;
           ["Rank", "Training"].forEach(sec => {
             html += `<button type="button" class="daddy-btn ${state.playerSec === sec ? "active" : ""}" data-sec="${sec}">${sec}</button>`;
@@ -728,7 +740,6 @@
           html += `</div>`;
 
           if (state.playerSec === "Rank") {
-            // SUB-TOGGLE UNDER RANK: Clash Squad | Battle Royale
             html += `<div class="sub-toggle-wrap">
               <div class="sub-label">Rank Mode</div>
               <div class="sub-toggle">`;
@@ -750,13 +761,10 @@
               const today = new Date().toISOString().slice(0, 10);
               html += `<label>Date</label><input id="rankDate" type="date" value="${today}" />`;
               html += `<label>Kills</label><input id="rankKills" type="number" min="0" value="0" />`;
-
-              // SEPARATE WIN & LOSS BUTTONS
               html += `<label>Result</label><div class="outcome-grid">
                 <button type="button" class="outcome-btn win ${state.matchResult === "win" ? "active" : ""}" data-outcome="win">WIN</button>
                 <button type="button" class="outcome-btn loss ${state.matchResult === "loss" ? "active" : ""}" data-outcome="loss">LOSS</button>
               </div>`;
-
               html += `<button type="button" class="btn btn-primary" id="saveRankMatch">Save Match</button>`;
             }
 
@@ -788,7 +796,9 @@
         } else if (state.teamSubView === "squad" && activeTeam) {
           html += `<div style="margin-bottom:10px;"><button type="button" class="btn btn-ghost" id="backToTeam">← Back to Team</button></div>`;
           html += `<div class="team-banner">${escapeHtml(activeTeam.team_name)}</div>`;
-          html += `<div class="card"><div class="section-title">Squad Players</div>`;
+          html += `<div class="card">`;
+          html += `<div class="row-item"><span>Team Code</span><strong>${escapeHtml(activeTeam.invite_code)}</strong></div>`;
+          html += `<div class="section-title" style="margin-top:12px;">Squad Players</div>`;
 
           (activeTeam.members || []).forEach(m => {
             ensurePlayer(m);
@@ -804,28 +814,32 @@
           }
           html += `</div>`;
         } else {
-          const bannerLabel = activeTeam ? activeTeam.team_name : "THE EMPIRE";
-          html += `<button type="button" class="team-banner" id="openSquadBanner">${escapeHtml(bannerLabel)} (Tap for Players)</button>`;
+          if (activeTeam) {
+            html += `<button type="button" class="team-banner" id="openSquadBanner">${escapeHtml(activeTeam.team_name)} • Code: ${escapeHtml(activeTeam.invite_code)} (Tap for Players)</button>`;
+          }
 
-          const savedTeams = Object.keys(state.store.teams || {});
+          const joinedTeams = Object.keys(state.store.teams || {}).filter(tName =>
+            (state.store.teams[tName].members || []).includes(loggedPlayer.player_name)
+          );
+
           html += `<div class="card">`;
-          if (savedTeams.length > 1) {
-            html += `<label>Switch Team</label><select id="switchTeamSelect">`;
-            savedTeams.forEach(t => {
+          if (joinedTeams.length > 1) {
+            html += `<label>Switch Joined Team</label><select id="switchTeamSelect">`;
+            joinedTeams.forEach(t => {
               html += `<option value="${escapeHtml(t)}" ${activeTeam && activeTeam.team_name === t ? "selected" : ""}>${escapeHtml(t)}</option>`;
             });
             html += `</select>`;
           }
 
-          html += `<label>Team Name</label><input id="teamNameInput" type="text" autocomplete="off" value="${escapeHtml(activeTeam ? activeTeam.team_name : "THE EMPIRE")}" />`;
-          html += `<label>Invite Code</label><input id="teamCodeInput" type="text" autocomplete="off" value="${escapeHtml(activeTeam ? activeTeam.invite_code : "CAD-01")}" />`;
-          html += `<button type="button" class="btn btn-primary" id="saveTeamBtn">Save Team</button>`;
+          html += `<label>Team Name (Exact Space & Case Sensitive)</label>`;
+          html += `<input id="teamNameInput" type="text" autocomplete="off" value="${escapeHtml(state.teamInputName)}" placeholder="Enter team name" />`;
+          html += `<button type="button" class="btn btn-primary" id="submitTeamNameBtn">Continue</button>`;
 
-          html += `<button type="button" class="btn" id="toggleAddTeam">${state.showAddTeam ? "Hide Add Team" : "+ Add New Team"}</button>`;
-          if (state.showAddTeam) {
-            html += `<label>New Team Name</label><input id="addTeamName" type="text" autocomplete="off" placeholder="Team name" />`;
-            html += `<label>Invite Code</label><input id="addTeamCode" type="text" autocomplete="off" value="CAD-02" />`;
-            html += `<button type="button" class="btn btn-primary" id="createTeamBtn">Create Team</button>`;
+          if (state.pendingJoinTeam && Object.prototype.hasOwnProperty.call(state.store.teams || {}, state.pendingJoinTeam)) {
+            html += `<div class="error" style="margin-top:12px;">Team "${escapeHtml(state.pendingJoinTeam)}" already exists. Enter its Team Code to join:</div>`;
+            html += `<label>Team Code</label>`;
+            html += `<input id="joinCodeInput" type="text" autocomplete="off" value="${escapeHtml(state.joinCodeInput)}" placeholder="Enter team code" />`;
+            html += `<button type="button" class="btn btn-primary" id="verifyJoinCodeBtn">Join Team</button>`;
           }
           html += `</div>`;
         }
@@ -834,7 +848,7 @@
       if (state.tab === "Graphs") {
         const members = activeTeam && (activeTeam.members || []).length
           ? activeTeam.members
-          : Object.keys(state.store.players || {});
+          : [loggedPlayer.player_name];
 
         html += `<div class="card"><div class="section-title">Team Player Rank</div>`;
         const ranked = members.map(m => ({ name: m, info: playerSummary(ensurePlayer(m)) }))
@@ -1077,23 +1091,8 @@
 
       const openSquadBanner = document.getElementById("openSquadBanner");
       if (openSquadBanner) {
-        openSquadBanner.onclick = async () => {
+        openSquadBanner.onclick = () => {
           setFeedback({});
-          let team = getActiveTeam();
-          if (!team) {
-            const tName = "THE EMPIRE";
-            state.store.teams[tName] = {
-              team_name: tName,
-              invite_code: "CAD-01",
-              members: [state.loggedPlayer],
-              invites_sent: []
-            };
-            state.store.active_team = tName;
-            state.teamSubView = "squad";
-            render();
-            await syncStoreNow();
-            return;
-          }
           state.teamSubView = "squad";
           render();
         };
@@ -1103,74 +1102,118 @@
       if (switchTeamSelect) {
         switchTeamSelect.onchange = async () => {
           state.store.active_team = switchTeamSelect.value;
+          state.pendingJoinTeam = null;
+          state.joinCodeInput = "";
           render();
           await syncStoreNow();
         };
       }
 
-      const saveTeamBtn = document.getElementById("saveTeamBtn");
-      if (saveTeamBtn) {
-        saveTeamBtn.onclick = async () => {
+      const teamNameInput = document.getElementById("teamNameInput");
+      if (teamNameInput) {
+        teamNameInput.addEventListener("input", (e) => {
+          state.teamInputName = e.target.value;
+          if (state.pendingJoinTeam && e.target.value.trim() !== state.pendingJoinTeam) {
+            state.pendingJoinTeam = null;
+            state.joinCodeInput = "";
+          }
+        });
+      }
+
+      const joinCodeInput = document.getElementById("joinCodeInput");
+      if (joinCodeInput) {
+        joinCodeInput.addEventListener("input", (e) => {
+          state.joinCodeInput = e.target.value;
+        });
+      }
+
+      const submitTeamNameBtn = document.getElementById("submitTeamNameBtn");
+      if (submitTeamNameBtn) {
+        submitTeamNameBtn.onclick = async () => {
           setFeedback({});
-          const tName = (document.getElementById("teamNameInput")?.value || "").trim();
-          const tCode = (document.getElementById("teamCodeInput")?.value || "CAD-01").trim() || "CAD-01";
-          if (!tName) {
-            setFeedback({ error: "Team name cannot be empty." });
+          const rawName = (document.getElementById("teamNameInput")?.value ?? state.teamInputName) || "";
+          const exactName = rawName.trim();
+          state.teamInputName = exactName;
+
+          if (!exactName) {
+            state.pendingJoinTeam = null;
+            setFeedback({ error: "Please enter a team name." });
             render();
             return;
           }
-          const existing = state.store.teams[tName];
-          if (existing) {
-            existing.invite_code = tCode;
-            existing.members = existing.members || [];
-            if (!existing.members.includes(state.loggedPlayer)) {
-              existing.members.push(state.loggedPlayer);
+
+          const hasExactMatch = Object.prototype.hasOwnProperty.call(state.store.teams || {}, exactName);
+
+          if (hasExactMatch) {
+            const existingTeam = state.store.teams[exactName];
+            existingTeam.members = existingTeam.members || [];
+            if (existingTeam.members.includes(state.loggedPlayer)) {
+              state.store.active_team = exactName;
+              state.pendingJoinTeam = null;
+              state.joinCodeInput = "";
+              state.teamInputName = "";
+              setFeedback({ message: `Switched to "${exactName}".` });
+              render();
+              await syncStoreNow(`Switched to "${exactName}".`);
+              return;
             }
-          } else {
-            state.store.teams[tName] = {
-              team_name: tName,
-              invite_code: tCode,
-              members: [state.loggedPlayer],
-              invites_sent: []
-            };
-          }
-          state.store.active_team = tName;
-          setFeedback({ message: "Team saved." });
-          render();
-          await syncStoreNow("Team saved.");
-        };
-      }
-
-      const toggleAddTeam = document.getElementById("toggleAddTeam");
-      if (toggleAddTeam) {
-        toggleAddTeam.onclick = () => {
-          state.showAddTeam = !state.showAddTeam;
-          render();
-        };
-      }
-
-      const createTeamBtn = document.getElementById("createTeamBtn");
-      if (createTeamBtn) {
-        createTeamBtn.onclick = async () => {
-          setFeedback({});
-          const addName = (document.getElementById("addTeamName")?.value || "").trim();
-          const addCode = (document.getElementById("addTeamCode")?.value || "CAD-02").trim() || "CAD-02";
-          if (!addName) {
-            setFeedback({ error: "Enter a new team name." });
+            state.pendingJoinTeam = exactName;
+            state.joinCodeInput = "";
             render();
             return;
           }
-          state.store.teams[addName] = {
-            team_name: addName,
-            invite_code: addCode,
+
+          state.pendingJoinTeam = null;
+          state.joinCodeInput = "";
+          state.teamInputName = "";
+          const newCode = generateTeamCode();
+          state.store.teams[exactName] = {
+            team_name: exactName,
+            invite_code: newCode,
             members: [state.loggedPlayer],
             invites_sent: []
           };
-          state.store.active_team = addName;
-          state.showAddTeam = false;
-          setFeedback({ message: `Created ${addName}.` });
+          state.store.active_team = exactName;
+          setFeedback({ message: `New team "${exactName}" created! Team Code: ${newCode}` });
           render();
-          await syncStoreNow(`Created ${addName}.`);
+          await syncStoreNow(`New team "${exactName}" created! Team Code: ${newCode}`);
+        };
+      }
+
+      const verifyJoinCodeBtn = document.getElementById("verifyJoinCodeBtn");
+      if (verifyJoinCodeBtn) {
+        verifyJoinCodeBtn.onclick = async () => {
+          setFeedback({});
+          const targetName = state.pendingJoinTeam;
+          const enteredCode = ((document.getElementById("joinCodeInput")?.value ?? state.joinCodeInput) || "").trim();
+          const teamObj = targetName && Object.prototype.hasOwnProperty.call(state.store.teams || {}, targetName)
+            ? state.store.teams[targetName]
+            : null;
+
+          if (!teamObj) {
+            state.pendingJoinTeam = null;
+            setFeedback({ error: "Team not found." });
+            render();
+            return;
+          }
+
+          if (enteredCode !== String(teamObj.invite_code || "")) {
+            setFeedback({ error: "Wrong team code." });
+            render();
+            return;
+          }
+
+          teamObj.members = teamObj.members || [];
+          if (!teamObj.members.includes(state.loggedPlayer)) {
+            teamObj.members.push(state.loggedPlayer);
+          }
+          state.store.active_team = targetName;
+          state.pendingJoinTeam = null;
+          state.joinCodeInput = "";
+          state.teamInputName = "";
+          setFeedback({ message: `Joined "${targetName}"!` });
+          render();
+          await syncStoreNow(`Joined "${targetName}"!`);
         };
       }
 
@@ -1235,7 +1278,6 @@
         };
       }
 
-      // Daddy Toggle: Rank | Training
       document.querySelectorAll("[data-sec]").forEach(btn => {
         btn.onclick = () => {
           state.playerSec = btn.dataset.sec;
@@ -1244,7 +1286,6 @@
         };
       });
 
-      // Sub-Toggle: Clash Squad | Battle Royale
       document.querySelectorAll("[data-rmode]").forEach(btn => {
         btn.onclick = () => {
           state.rankMode = btn.dataset.rmode;
@@ -1253,7 +1294,6 @@
         };
       });
 
-      // Separate Win / Loss Buttons
       document.querySelectorAll("[data-outcome]").forEach(btn => {
         btn.onclick = () => {
           state.matchResult = btn.dataset.outcome;

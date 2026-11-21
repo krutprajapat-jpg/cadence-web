@@ -1,0 +1,22 @@
+{
+    "players": {
+        "kp": {
+            "player_name": "kp",
+            "role": "Primary Rusher",
+            "stats": {
+                "rank": {
+                    "clash_squad": [],
+                    "battle_royale": []
+                },
+                "training": {
+                    "kd_ratio": 0.0,
+                    "avg_kd": 0.0,
+                    "logs": []
+                }
+            }
+        }
+    },
+    "teams": {},
+    "active_player": "kp",
+    "active_team": null
+}

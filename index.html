@@ -280,6 +280,22 @@
       color: #FCA5A5;
     }
 
+    .btn-del-mini {
+      background: rgba(239, 68, 68, 0.14);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #FCA5A5;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-del-mini:hover {
+      background: var(--danger);
+      color: #FFFFFF;
+    }
+
     .btn-ghost {
       background: transparent;
       border: 1px solid var(--border);
@@ -346,7 +362,15 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
       font-size: 0.85rem;
+    }
+
+    .row-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .row-item.clickable {
@@ -513,8 +537,9 @@
       player.stats.training = player.stats.training || { kd_ratio: 0.0, avg_kd: 0.0, logs: [] };
       const logs = player.stats.training.logs || [];
       if (!logs.length) {
-        player.stats.training.avg_kd = Number(Number(player.stats.training.kd_ratio || 0).toFixed(2));
-        return player.stats.training.avg_kd;
+        player.stats.training.kd_ratio = 0.0;
+        player.stats.training.avg_kd = 0.0;
+        return 0.0;
       }
       const sum = logs.reduce((acc, item) => acc + Number(item.kd || 0), 0);
       const avg = Number((sum / logs.length).toFixed(2));
@@ -800,9 +825,13 @@
               html += `<button type="button" class="btn btn-primary" id="saveRankMatch">Save Match</button>`;
             }
 
-            entries.slice(-8).reverse().forEach(item => {
+            const recent = entries.map((item, idx) => ({ item, idx })).slice(-8).reverse();
+            recent.forEach(({ item, idx }) => {
               const badgeClass = item.won ? "badge-win" : "badge-loss";
-              html += `<div class="row-item"><span>${escapeHtml(item.date)} • Kills: ${item.kills}</span><span class="${badgeClass}">${item.won ? "WIN" : "LOSS"}</span></div>`;
+              const delBtn = canEdit
+                ? `<button type="button" class="btn-del-mini" data-del-rank="${idx}">Delete</button>`
+                : "";
+              html += `<div class="row-item"><span>${escapeHtml(item.date)} • Kills: ${item.kills}</span><div class="row-right"><span class="${badgeClass}">${item.won ? "WIN" : "LOSS"}</span>${delBtn}</div></div>`;
             });
           } else {
             const avgKd = recomputeAvgKd(target);
@@ -819,8 +848,12 @@
               html += `<button type="button" class="btn btn-primary" id="saveTraining">Save Training Game</button>`;
             }
 
-            logs.slice(-8).reverse().forEach(item => {
-              html += `<div class="row-item"><span>${escapeHtml(item.date)} • K/D: ${Number(item.kd || 0).toFixed(2)}</span><span>Kills: ${item.kills || 0}</span></div>`;
+            const recentLogs = logs.map((item, idx) => ({ item, idx })).slice(-8).reverse();
+            recentLogs.forEach(({ item, idx }) => {
+              const delBtn = canEdit
+                ? `<button type="button" class="btn-del-mini" data-del-training="${idx}">Delete</button>`
+                : "";
+              html += `<div class="row-item"><span>${escapeHtml(item.date)} • K/D: ${Number(item.kd || 0).toFixed(2)}</span><div class="row-right"><span>Kills: ${item.kills || 0}</span>${delBtn}</div></div>`;
             });
           }
 
@@ -1404,6 +1437,24 @@
         };
       }
 
+      document.querySelectorAll("[data-del-rank]").forEach(btn => {
+        btn.onclick = async (e) => {
+          e.stopPropagation();
+          setFeedback({});
+          const target = ensurePlayer(state.selectedMember);
+          if (!target || target.player_name !== loggedPlayer.player_name) return;
+          const key = state.rankMode === "Clash Squad" ? "clash_squad" : "battle_royale";
+          const idx = parseInt(btn.dataset.delRank, 10);
+          const list = target.stats.rank[key] || [];
+          if (idx >= 0 && idx < list.length) {
+            list.splice(idx, 1);
+            setFeedback({ message: "Match entry deleted." });
+            render();
+            await syncStoreNow("Match entry deleted.");
+          }
+        };
+      });
+
       const saveTraining = document.getElementById("saveTraining");
       if (saveTraining) {
         saveTraining.onclick = async () => {
@@ -1420,6 +1471,24 @@
           await syncStoreNow("Training game saved.");
         };
       }
+
+      document.querySelectorAll("[data-del-training]").forEach(btn => {
+        btn.onclick = async (e) => {
+          e.stopPropagation();
+          setFeedback({});
+          const target = ensurePlayer(state.selectedMember);
+          if (!target || target.player_name !== loggedPlayer.player_name) return;
+          const idx = parseInt(btn.dataset.delTraining, 10);
+          const logs = target.stats.training.logs || [];
+          if (idx >= 0 && idx < logs.length) {
+            logs.splice(idx, 1);
+            recomputeAvgKd(target);
+            setFeedback({ message: "Training entry deleted." });
+            render();
+            await syncStoreNow("Training entry deleted.");
+          }
+        };
+      });
 
       document.querySelectorAll("[data-grange]").forEach(btn => {
         btn.onclick = () => {

@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CADENCE</title>
+  <style>
+    :root {
+      --bg: #0E0E10;
+      --card: #18181B;
+      --card-2: #222226;
+      --border: #2C2C32;
+      --text: #F4F4F5;
+      --muted: #A1A1AA;
+      --accent: #22C55E;
+      --accent-text: #07130B;
+      --danger: #EF4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      padding: 16px 14px 48px 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .session-chip {
+      font-size: 0.76rem;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 210px;
+    }
+
+    .nav-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 9px 6px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .nav-btn.active {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      color: var(--text);
+    }
+
+    .team-banner {
+      width: 100%;
+      background: #E4E4E7;
+      color: #09090B;
+      border: none;
+      border-radius: 999px;
+      padding: 13px 16px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--card-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      margin-top: 6px;
+      transition: 0.15s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      width: auto;
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin: 10px 0 4px 2px;
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      margin-bottom: 8px;
+    }
+
+    .choice-pill {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .choice-pill.active {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .row-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .row-item.clickable {
+      cursor: pointer;
+    }
+
+    .row-item.clickable:hover {
+      border-color: var(--accent);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .error {
+      background: rgba(239, 68, 68, 0.14);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #FCA5A5;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 0.84rem;
+      margin-top: 8px;
+    }
+
+    .success {
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      color: #86EFAC;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 0.84rem;
+      margin-top: 8px;
+    }
+
+    .metric-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin: 8px 0;
+    }
+
+    .metric-val {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: var(--card-2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 6px 0 10px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 150px;
+      padding: 12px 8px 4px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow-x: auto;
+    }
+
+    .bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 36px;
+      flex: 1;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-num {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .bar-rect {
+      width: 100%;
+      max-width: 26px;
+      background: var(--accent);
+      border-radius: 6px 6px 0 0;
+      min-height: 4px;
+    }
+
+    .bar-lbl {
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 10px 0;
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+
+  <script>
+    const SUPABASE_URL = "https://yaghdgrfuuehicfvukpu.supabase.co";
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";
+
+    const ROLES = ["Primary Rusher", "Secondary Rusher", "Sniper", "Supporter"];
+
+    const state = {
+      store: { players: {}, teams: {}, active_team: null },
+      loggedPlayer: localStorage.getItem("cadence_logged_player") || null,
+      forceLogin: false,
+      tab: "Team",
+      teamSubView: "home",
+      selectedMember: null,
+      playerSec: "Rank",
+      rankMode: "Clash Squad",
+      graphRange: "Date-wise",
+      graphMetric: "Kills",
+      authRole: ROLES[0],
+      showAddPlayer: false,
+      showAddTeam: false,
+      showChangePwd: false,
+      message: null,
+      error: null,
+      loading: true
+    };
+
+    function defaultStats() {
+      return {
+        rank: { clash_squad: [], battle_royale: [] },
+        training: { kd_ratio: 0.0, avg_kd: 0.0, logs: [] }
+      };
+    }
+
+    function recomputeAvgKd(player) {
+      player.stats = player.stats || defaultStats();
+      player.stats.training = player.stats.training || { kd_ratio: 0.0, avg_kd: 0.0, logs: [] };
+      const logs = player.stats.training.logs || [];
+      if (!logs.length) {
+        player.stats.training.avg_kd = Number(Number(player.stats.training.kd_ratio || 0).toFixed(2));
+        return player.stats.training.avg_kd;
+      }
+      const sum = logs.reduce((acc, item) => acc + Number(item.kd || 0), 0);
+      const avg = Number((sum / logs.length).toFixed(2));
+      player.stats.training.avg_kd = avg;
+      player.stats.training.kd_ratio = Number(Number(logs[logs.length - 1].kd ?? avg).toFixed(2));
+      return avg;
+    }
+
+    function ensurePlayer(name, role = null, passwordHex = null, salt = null) {
+      const clean = (name || "").trim();
+      if (!clean) return null;
+      state.store.players = state.store.players || {};
+      if (!state.store.players[clean]) {
+        const rec = {
+          player_name: clean,
+          role: ROLES.includes(role) ? role : ROLES[0],
+          stats: defaultStats()
+        };
+        if (passwordHex && salt) {
+          rec.auth = { salt, hash: passwordHex };
+        }
+        state.store.players[clean] = rec;
+      } else {
+        if (ROLES.includes(role)) {
+          state.store.players[clean].role = role;
+        }
+        if (passwordHex && salt && !state.store.players[clean].auth) {
+          state.store.players[clean].auth = { salt, hash: passwordHex };
+        }
+      }
+      recomputeAvgKd(state.store.players[clean]);
+      return state.store.players[clean];
+    }
+
+    async function sha256Hex(text) {
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest("SHA-256", enc);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function randomSalt() {
+      const arr = new Uint8Array(8);
+      crypto.getRandomValues(arr);
+      return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function makeAuth(password) {
+      const salt = randomSalt();
+      const hash = await sha256Hex(`${salt}:${password}`);
+      return { salt, hash };
+    }
+
+    async function checkAuth(password, authObj) {
+      if (!authObj || !authObj.salt || !authObj.hash) return false;
+      const testHash = await sha256Hex(`${authObj.salt}:${password}`);
+      return testHash === authObj.hash;
+    }
+
+    async function loadFromSupabase() {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/cadence_store?id=eq.main&select=data`, {
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      if (!res.ok) {
+        throw new Error(`Supabase read failed (${res.status})`);
+      }
+      const rows = await res.json();
+      let data = rows.length ? rows[0].data : null;
+      if (!data) {
+        data = { players: {}, teams: {}, active_team: null };
+        await saveToSupabase(data);
+      }
+      data.players = data.players || {};
+      data.teams = data.teams || {};
+      Object.values(data.players).forEach(p => recomputeAvgKd(p));
+      return data;
+    }
+
+    async function saveToSupabase(data) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/cadence_store`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates"
+        },
+        body: JSON.stringify([{ id: "main", data }])
+      });
+      if (!res.ok) {
+        throw new Error(`Supabase save failed (${res.status})`);
+      }
+    }
+
+    function playerSummary(player) {
+      const st = player.stats || defaultStats();
+      const cs = (st.rank?.clash_squad || []).reduce((s, x) => s + Number(x.kills || 0), 0);
+      const br = (st.rank?.battle_royale || []).reduce((s, x) => s + Number(x.kills || 0), 0);
+      const avgKd = recomputeAvgKd(player);
+      return {
+        kills: cs + br,
+        avgKd,
+        composite: Number((cs + br + avgKd * 10).toFixed(1))
+      };
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function setFeedback({ error = null, message = null }) {
+      state.error = error;
+      state.message = message;
+    }
+
+    function getActiveTeam() {
+      const teams = state.store.teams || {};
+      let name = state.store.active_team;
+      if (!teams[name]) {
+        const keys = Object.keys(teams);
+        name = keys.length ? keys[keys.length - 1] : null;
+        state.store.active_team = name;
+      }
+      return name ? teams[name] : null;
+    }
+
+    function render() {
+      const root = document.getElementById("app");
+      if (state.loading) {
+        root.innerHTML = `<div class="card"><p class="muted">Loading CADENCE...</p></div>`;
+        return;
+      }
+
+      const loggedPlayer = state.loggedPlayer && state.store.players[state.loggedPlayer]
+        ? state.store.players[state.loggedPlayer]
+        : null;
+
+      const activeTeam = getActiveTeam();
+
+      let html = `
+        <div class="topbar">
+          <div class="brand">
+            <img src="CADENCEnobg.png" alt="CADENCE" onerror="this.style.display='none'" />
+            <div class="brand-title">CADENCE</div>
+          </div>
+          ${loggedPlayer ? `<div class="session-chip">${escapeHtml(loggedPlayer.player_name)} • ${escapeHtml(activeTeam ? activeTeam.team_name : "No Team")}</div>` : ""}
+        </div>
+      `;
+
+      if (state.error) {
+        html += `<div class="error">${escapeHtml(state.error)}</div>`;
+      }
+      if (state.message) {
+        html += `<div class="success">${escapeHtml(state.message)}</div>`;
+      }
+
+      if (!loggedPlayer || state.forceLogin) {
+        html += `<div class="card"><h3 class="section-title">Player Login</h3>`;
+        html += `<label>Player Name</label><input id="loginName" type="text" value="${escapeHtml(state.loggedPlayer || "")}" placeholder="Enter player name" />`;
+
+        html += `<label>Role (for new account)</label><div class="pill-group">`;
+        ROLES.forEach(r => {
+          const active = state.authRole === r ? "active" : "";
+          html += `<button type="button" class="choice-pill ${active}" data-auth-role="${escapeHtml(r)}">${escapeHtml(r)}</button>`;
+        });
+        html += `</div>`;
+
+        html += `<label>Password</label><input id="loginPwd" type="password" placeholder="Enter password (for existing player)" />`;
+        html += `<button class="btn btn-primary" id="btnLogin">Login</button>`;
+
+        html += `<hr style="border:0;border-top:1px solid var(--border);margin:14px 0;" />`;
+        html += `<div class="muted" style="margin-bottom:4px;">New player? Create account below:</div>`;
+        html += `<label>Create Password</label><input id="regPwd1" type="password" placeholder="At least 4 characters" />`;
+        html += `<label>Confirm Password</label><input id="regPwd2" type="password" placeholder="Re-enter password" />`;
+        html += `<button class="btn" id="btnRegister">Create Account & Continue</button>`;
+
+        if (loggedPlayer) {
+          html += `<button class="btn" id="btnCancelLogin">Cancel</button>`;
+        }
+        html += `</div>`;
+        root.innerHTML = html;
+        bindEvents();
+        return;
+      }
+
+      html += `<div class="nav-pills">`;
+      ["Team", "Graphs", "Menu"].forEach(t => {
+        html += `<button type="button" class="nav-btn ${state.tab === t ? "active" : ""}" data-tab="${t}">${t}</button>`;
+      });
+      html += `</div>`;
+
+      if (state.tab === "Team") {
+        if (state.teamSubView === "player" && state.selectedMember && activeTeam) {
+          const target = ensurePlayer(state.selectedMember);
+          const canEdit = target.player_name === loggedPlayer.player_name;
+
+          html += `<div style="margin-bottom:10px;"><button type="button" class="btn btn-ghost" id="backToSquad">← Back to Squad</button></div>`;
+          html += `<div class="card">`;
+          html += `<div class="section-title">${escapeHtml(target.player_name)} <span class="muted">(${escapeHtml(target.role)} • ${canEdit ? "Editable" : "View Only"})</span></div>`;
+
+          html += `<div class="pill-group">`;
+          ["Rank", "Training"].forEach(sec => {
+            html += `<button type="button" class="choice-pill ${state.playerSec === sec ? "active" : ""}" data-sec="${sec}">${sec}</button>`;
+          });
+          html += `</div>`;
+
+          if (state.playerSec === "Rank") {
+            html += `<div class="pill-group">`;
+            ["Clash Squad", "Battle Royale"].forEach(m => {
+              html += `<button type="button" class="choice-pill ${state.rankMode === m ? "active" : ""}" data-rmode="${m}">${m}</button>`;
+            });
+            html += `</div>`;
+
+            const key = state.rankMode === "Clash Squad" ? "clash_squad" : "battle_royale";
+            target.stats.rank[key] = target.stats.rank[key] || [];
+            const entries = target.stats.rank[key];
+            const totalKills = entries.reduce((s, x) => s + Number(x.kills || 0), 0);
+            const pct = Math.min(100, Math.round((totalKills / Math.max(25, totalKills)) * 100));
+
+            html += `<div class="muted">Total Kills: ${totalKills}</div>`;
+            html += `<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+
+            if (canEdit) {
+              const today = new Date().toISOString().slice(0, 10);
+              html += `<label>Date</label><input id="rankDate" type="date" value="${today}" />`;
+              html += `<label>Kills</label><input id="rankKills" type="number" min="0" value="0" />`;
+              html += `<div class="switch-row"><span>Won Match</span><input id="rankWon" type="checkbox" checked style="width:auto;transform:scale(1.25);" /></div>`;
+              html += `<button type="button" class="btn btn-primary" id="saveRankMatch">Save Match</button>`;
+            }
+
+            entries.slice(-8).reverse().forEach(item => {
+              html += `<div class="row-item"><span>${escapeHtml(item.date)} • Kills: ${item.kills}</span><strong>${item.won ? "WIN" : "LOSS"}</strong></div>`;
+            });
+          } else {
+            const avgKd = recomputeAvgKd(target);
+            target.stats.training.logs = target.stats.training.logs || [];
+            const logs = target.stats.training.logs;
+
+            html += `<div class="metric-box"><div class="muted">Average K/D Ratio</div><div class="metric-val">${avgKd.toFixed(2)}</div></div>`;
+
+            if (canEdit) {
+              const today = new Date().toISOString().slice(0, 10);
+              html += `<label>Date</label><input id="trDate" type="date" value="${today}" />`;
+              html += `<label>Game K/D Ratio</label><input id="trKd" type="number" min="0" step="0.01" value="0.00" />`;
+              html += `<label>Kills</label><input id="trKills" type="number" min="0" value="0" />`;
+              html += `<button type="button" class="btn btn-primary" id="saveTraining">Save Training Game</button>`;
+            }
+
+            logs.slice(-8).reverse().forEach(item => {
+              html += `<div class="row-item"><span>${escapeHtml(item.date)} • K/D: ${Number(item.kd || 0).toFixed(2)}</span><span>Kills: ${item.kills || 0}</span></div>`;
+            });
+          }
+
+          html += `</div>`;
+        } else if (state.teamSubView === "squad" && activeTeam) {
+          html += `<div style="margin-bottom:10px;"><button type="button" class="btn btn-ghost" id="backToTeam">← Back to Team</button></div>`;
+          html += `<div class="team-banner">${escapeHtml(activeTeam.team_name)}</div>`;
+          html += `<div class="card"><div class="section-title">Squad Players</div>`;
+
+          (activeTeam.members || []).forEach(m => {
+            ensurePlayer(m);
+            html += `<div class="row-item clickable" data-open-member="${escapeHtml(m)}"><strong>${escapeHtml(m)}</strong><span class="muted">Open →</span></div>`;
+          });
+
+          html += `<button type="button" class="btn" id="toggleAddPlayer">${state.showAddPlayer ? "Hide Add Player" : "+ Add Player"}</button>`;
+          if (state.showAddPlayer) {
+            html += `<label>Player Name</label><input id="newMemberName" type="text" placeholder="Enter player name" />`;
+            html += `<label>Role</label><select id="newMemberRole">${ROLES.map(r => `<option value="${r}">${r}</option>`).join("")}</select>`;
+            html += `<label>Password (if new player)</label><input id="newMemberPwd" type="password" placeholder="Optional if existing" />`;
+            html += `<button type="button" class="btn btn-primary" id="confirmAddPlayer">Add to Squad</button>`;
+          }
+          html += `</div>`;
+        } else {
+          const bannerLabel = activeTeam ? activeTeam.team_name : "THE EMPIRE";
+          html += `<button type="button" class="team-banner" id="openSquadBanner">${escapeHtml(bannerLabel)} (Tap for Players)</button>`;
+
+          const savedTeams = Object.keys(state.store.teams || {});
+          html += `<div class="card">`;
+          if (savedTeams.length > 1) {
+            html += `<label>Switch Team</label><select id="switchTeamSelect">`;
+            savedTeams.forEach(t => {
+              html += `<option value="${escapeHtml(t)}" ${activeTeam && activeTeam.team_name === t ? "selected" : ""}>${escapeHtml(t)}</option>`;
+            });
+            html += `</select>`;
+          }
+
+          html += `<label>Team Name</label><input id="teamNameInput" type="text" value="${escapeHtml(activeTeam ? activeTeam.team_name : "THE EMPIRE")}" />`;
+          html += `<label>Invite Code</label><input id="teamCodeInput" type="text" value="${escapeHtml(activeTeam ? activeTeam.invite_code : "CAD-01")}" />`;
+          html += `<button type="button" class="btn btn-primary" id="saveTeamBtn">Save Team</button>`;
+
+          html += `<button type="button" class="btn" id="toggleAddTeam">${state.showAddTeam ? "Hide Add Team" : "+ Add New Team"}</button>`;
+          if (state.showAddTeam) {
+            html += `<label>New Team Name</label><input id="addTeamName" type="text" placeholder="Team name" />`;
+            html += `<label>Invite Code</label><input id="addTeamCode" type="text" value="CAD-02" />`;
+            html += `<button type="button" class="btn btn-primary" id="createTeamBtn">Create Team</button>`;
+          }
+          html += `</div>`;
+        }
+      }
+
+      if (state.tab === "Graphs") {
+        const members = activeTeam && (activeTeam.members || []).length
+          ? activeTeam.members
+          : Object.keys(state.store.players || {});
+
+        html += `<div class="card"><div class="section-title">Team Player Rank</div>`;
+        const ranked = members.map(m => ({ name: m, info: playerSummary(ensurePlayer(m)) }))
+          .sort((a, b) => b.info.composite - a.info.composite);
+
+        if (!ranked.length) {
+          html += `<div class="muted">No players yet.</div>`;
+        } else {
+          ranked.forEach((item, i) => {
+            html += `<div class="row-item"><span><strong>#${i + 1} ${escapeHtml(item.name)}</strong></span><span class="muted">Kills: ${item.info.kills} • Avg K/D: ${item.info.avgKd.toFixed(2)}</span></div>`;
+          });
+        }
+        html += `</div>`;
+
+        html += `<div class="card"><div class="section-title">Performance Graph</div>`;
+        html += `<div class="pill-group">`;
+        ["Date-wise", "Last 30 Days", "Last 90 Days"].forEach(rng => {
+          html += `<button type="button" class="choice-pill ${state.graphRange === rng ? "active" : ""}" data-grange="${rng}">${rng}</button>`;
+        });
+        html += `</div>`;
+
+        html += `<div class="pill-group">`;
+        ["Kills", "Avg K/D", "Games Played"].forEach(m => {
+          html += `<button type="button" class="choice-pill ${state.graphMetric === m ? "active" : ""}" data-gmetric="${m}">${m}</button>`;
+        });
+        html += `</div>`;
+
+        let cutoff = null;
+        if (state.graphRange === "Last 30 Days") {
+          cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+        } else if (state.graphRange === "Last 90 Days") {
+          cutoff = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+        }
+
+        const inRange = (d) => !cutoff || !d || d >= cutoff;
+        const rankGames = [];
+        const trLogs = [];
+
+        members.forEach(m => {
+          const s = ensurePlayer(m).stats || defaultStats();
+          (s.rank?.clash_squad || []).concat(s.rank?.battle_royale || []).forEach(g => {
+            if (inRange(g.date)) rankGames.push(g);
+          });
+          (s.training?.logs || []).forEach(t => {
+            if (inRange(t.date)) trLogs.push(t);
+          });
+        });
+
+        const wins = rankGames.filter(g => g.won).length;
+        const losses = rankGames.length - wins;
+        const winPct = rankGames.length ? Math.round((wins / rankGames.length) * 100) : 0;
+
+        html += `<div class="muted" style="margin-bottom:8px;">Games: ${rankGames.length + trLogs.length} | W/L: ${wins}W-${losses}L (${winPct}%)</div>`;
+
+        const seriesMap = {};
+        if (state.graphMetric === "Kills") {
+          rankGames.forEach(g => {
+            const k = g.date || "N/A";
+            seriesMap[k] = (seriesMap[k] || 0) + Number(g.kills || 0);
+          });
+        } else if (state.graphMetric === "Avg K/D") {
+          const buckets = {};
+          trLogs.forEach(t => {
+            const k = t.date || "N/A";
+            buckets[k] = buckets[k] || [];
+            buckets[k].push(Number(t.kd || 0));
+          });
+          Object.keys(buckets).forEach(k => {
+            seriesMap[k] = Number((buckets[k].reduce((a, b) => a + b, 0) / buckets[k].length).toFixed(2));
+          });
+        } else {
+          rankGames.concat(trLogs).forEach(item => {
+            const k = item.date || "N/A";
+            seriesMap[k] = (seriesMap[k] || 0) + 1;
+          });
+        }
+
+        const entries = Object.entries(seriesMap).sort((a, b) => a[0].localeCompare(b[0]));
+        if (!entries.length) {
+          html += `<div class="muted">No records for this filter yet.</div>`;
+        } else {
+          const maxVal = Math.max(...entries.map(e => e[1]), 1);
+          html += `<div class="bars">`;
+          entries.forEach(([label, val]) => {
+            const hPct = Math.max(6, Math.round((val / maxVal) * 100));
+            html += `
+              <div class="bar-col">
+                <div class="bar-num">${val}</div>
+                <div class="bar-rect" style="height:${hPct}%"></div>
+                <div class="bar-lbl">${escapeHtml(label.slice(5))}</div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+
+      if (state.tab === "Menu") {
+        html += `<div class="card">`;
+        html += `<div class="row-item"><span>Player</span><strong>${escapeHtml(loggedPlayer.player_name)}</strong></div>`;
+        html += `<div class="row-item"><span>Role</span><strong>${escapeHtml(loggedPlayer.role)}</strong></div>`;
+        html += `<div class="row-item"><span>Team</span><strong>${escapeHtml(activeTeam ? activeTeam.team_name : "None")}</strong></div>`;
+
+        html += `<button type="button" class="btn" id="switchPlayerBtn">Switch Player</button>`;
+        html += `<button type="button" class="btn" id="toggleChangePwd">${state.showChangePwd ? "Hide Change Password" : "Change Password"}</button>`;
+
+        if (state.showChangePwd) {
+          html += `<label>Current Password</label><input id="oldPwdInput" type="password" />`;
+          html += `<label>New Password</label><input id="newPwdInput" type="password" placeholder="At least 4 characters" />`;
+          html += `<button type="button" class="btn btn-primary" id="updatePwdBtn">Update Password</button>`;
+        }
+        html += `</div>`;
+      }
+
+      root.innerHTML = html;
+      bindEvents();
+    }
+
+    function bindEvents() {
+      document.querySelectorAll("[data-auth-role]").forEach(btn => {
+        btn.onclick = () => {
+          state.authRole = btn.dataset.authRole;
+          render();
+        };
+      });
+
+      const btnLogin = document.getElementById("btnLogin");
+      if (btnLogin) {
+        btnLogin.onclick = async () => {
+          setFeedback({});
+          const name = (document.getElementById("loginName")?.value || "").trim();
+          const pwd = document.getElementById("loginPwd")?.value || "";
+          if (!name) {
+            setFeedback({ error: "Enter a player name first." });
+            render();
+            return;
+          }
+          const player = state.store.players[name];
+          if (!player || !(await checkAuth(pwd, player.auth))) {
+            setFeedback({ error: "Wrong password or player not found." });
+            render();
+            return;
+          }
+          state.loggedPlayer = player.player_name;
+          localStorage.setItem("cadence_logged_player", player.player_name);
+          state.forceLogin = false;
+          render();
+        };
+      }
+
+      const btnRegister = document.getElementById("btnRegister");
+      if (btnRegister) {
+        btnRegister.onclick = async () => {
+          setFeedback({});
+          const name = (document.getElementById("loginName")?.value || "").trim();
+          const p1 = document.getElementById("regPwd1")?.value || "";
+          const p2 = document.getElementById("regPwd2")?.value || "";
+          if (!name) {
+            setFeedback({ error: "Enter a player name first." });
+            render();
+            return;
+          }
+          if (state.store.players[name]?.auth) {
+            setFeedback({ error: "Player already exists. Use Login above." });
+            render();
+            return;
+          }
+          if (p1.length < 4) {
+            setFeedback({ error: "Password must be at least 4 characters." });
+            render();
+            return;
+          }
+          if (p1 !== p2) {
+            setFeedback({ error: "Passwords do not match." });
+            render();
+            return;
+          }
+          const auth = await makeAuth(p1);
+          const rec = ensurePlayer(name, state.authRole, auth.hash, auth.salt);
+          await saveToSupabase(state.store);
+          state.loggedPlayer = rec.player_name;
+          localStorage.setItem("cadence_logged_player", rec.player_name);
+          state.forceLogin = false;
+          setFeedback({ message: "Account created!" });
+          render();
+        };
+      }
+
+      const btnCancelLogin = document.getElementById("btnCancelLogin");
+      if (btnCancelLogin) {
+        btnCancelLogin.onclick = () => {
+          state.forceLogin = false;
+          setFeedback({});
+          render();
+        };
+      }
+
+      document.querySelectorAll("[data-tab]").forEach(btn => {
+        btn.onclick = () => {
+          state.tab = btn.dataset.tab;
+          state.teamSubView = "home";
+          state.selectedMember = null;
+          setFeedback({});
+          render();
+        };
+      });
+
+      const openSquadBanner = document.getElementById("openSquadBanner");
+      if (openSquadBanner) {
+        openSquadBanner.onclick = async () => {
+          setFeedback({});
+          let team = getActiveTeam();
+          if (!team) {
+            const tName = "THE EMPIRE";
+            state.store.teams[tName] = {
+              team_name: tName,
+              invite_code: "CAD-01",
+              members: [state.loggedPlayer],
+              invites_sent: []
+            };
+            state.store.active_team = tName;
+            await saveToSupabase(state.store);
+          }
+          state.teamSubView = "squad";
+          render();
+        };
+      }
+
+      const switchTeamSelect = document.getElementById("switchTeamSelect");
+      if (switchTeamSelect) {
+        switchTeamSelect.onchange = async () => {
+          state.store.active_team = switchTeamSelect.value;
+          await saveToSupabase(state.store);
+          render();
+        };
+      }
+
+      const saveTeamBtn = document.getElementById("saveTeamBtn");
+      if (saveTeamBtn) {
+        saveTeamBtn.onclick = async () => {
+          setFeedback({});
+          const tName = (document.getElementById("teamNameInput")?.value || "").trim();
+          const tCode = (document.getElementById("teamCodeInput")?.value || "CAD-01").trim() || "CAD-01";
+          if (!tName) {
+            setFeedback({ error: "Team name cannot be empty." });
+            render();
+            return;
+          }
+          const existing = state.store.teams[tName];
+          if (existing) {
+            existing.invite_code = tCode;
+            existing.members = existing.members || [];
+            if (!existing.members.includes(state.loggedPlayer)) {
+              existing.members.push(state.loggedPlayer);
+            }
+          } else {
+            state.store.teams[tName] = {
+              team_name: tName,
+              invite_code: tCode,
+              members: [state.loggedPlayer],
+              invites_sent: []
+            };
+          }
+          state.store.active_team = tName;
+          await saveToSupabase(state.store);
+          setFeedback({ message: "Team saved to cloud." });
+          render();
+        };
+      }
+
+      const toggleAddTeam = document.getElementById("toggleAddTeam");
+      if (toggleAddTeam) {
+        toggleAddTeam.onclick = () => {
+          state.showAddTeam = !state.showAddTeam;
+          render();
+        };
+      }
+
+      const createTeamBtn = document.getElementById("createTeamBtn");
+      if (createTeamBtn) {
+        createTeamBtn.onclick = async () => {
+          setFeedback({});
+          const addName = (document.getElementById("addTeamName")?.value || "").trim();
+          const addCode = (document.getElementById("addTeamCode")?.value || "CAD-02").trim() || "CAD-02";
+          if (!addName) {
+            setFeedback({ error: "Enter a new team name." });
+            render();
+            return;
+          }
+          state.store.teams[addName] = {
+            team_name: addName,
+            invite_code: addCode,
+            members: [state.loggedPlayer],
+            invites_sent: []
+          };
+          state.store.active_team = addName;
+          state.showAddTeam = false;
+          await saveToSupabase(state.store);
+          setFeedback({ message: `Created ${addName}.` });
+          render();
+        };
+      }
+
+      const backToTeam = document.getElementById("backToTeam");
+      if (backToTeam) {
+        backToTeam.onclick = () => {
+          state.teamSubView = "home";
+          state.selectedMember = null;
+          render();
+        };
+      }
+
+      document.querySelectorAll("[data-open-member]").forEach(el => {
+        el.onclick = () => {
+          state.selectedMember = el.dataset.openMember;
+          state.teamSubView = "player";
+          render();
+        };
+      });
+
+      const toggleAddPlayer = document.getElementById("toggleAddPlayer");
+      if (toggleAddPlayer) {
+        toggleAddPlayer.onclick = () => {
+          state.showAddPlayer = !state.showAddPlayer;
+          render();
+        };
+      }
+
+      const confirmAddPlayer = document.getElementById("confirmAddPlayer");
+      if (confirmAddPlayer) {
+        confirmAddPlayer.onclick = async () => {
+          setFeedback({});
+          const mName = (document.getElementById("newMemberName")?.value || "").trim();
+          const mRole = document.getElementById("newMemberRole")?.value || ROLES[0];
+          const mPwd = document.getElementById("newMemberPwd")?.value || "";
+          const team = getActiveTeam();
+          if (!mName || !team) return;
+
+          let auth = null;
+          if (!state.store.players[mName] && mPwd.length >= 4) {
+            auth = await makeAuth(mPwd);
+          }
+          ensurePlayer(mName, mRole, auth?.hash || null, auth?.salt || null);
+          team.members = team.members || [];
+          if (!team.members.includes(mName)) {
+            team.members.push(mName);
+          }
+          state.showAddPlayer = false;
+          await saveToSupabase(state.store);
+          setFeedback({ message: `${mName} added.` });
+          render();
+        };
+      }
+
+      const backToSquad = document.getElementById("backToSquad");
+      if (backToSquad) {
+        backToSquad.onclick = () => {
+          state.selectedMember = null;
+          state.teamSubView = "squad";
+          render();
+        };
+      }
+
+      document.querySelectorAll("[data-sec]").forEach(btn => {
+        btn.onclick = () => {
+          state.playerSec = btn.dataset.sec;
+          render();
+        };
+      });
+
+      document.querySelectorAll("[data-rmode]").forEach(btn => {
+        btn.onclick = () => {
+          state.rankMode = btn.dataset.rmode;
+          render();
+        };
+      });
+
+      const saveRankMatch = document.getElementById("saveRankMatch");
+      if (saveRankMatch) {
+        saveRankMatch.onclick = async () => {
+          setFeedback({});
+          const target = ensurePlayer(state.selectedMember);
+          const key = state.rankMode === "Clash Squad" ? "clash_squad" : "battle_royale";
+          const dateVal = document.getElementById("rankDate")?.value || new Date().toISOString().slice(0, 10);
+          const killsVal = Math.max(0, parseInt(document.getElementById("rankKills")?.value || "0", 10));
+          const wonVal = Boolean(document.getElementById("rankWon")?.checked);
+          target.stats.rank[key] = target.stats.rank[key] || [];
+          target.stats.rank[key].push({ date: dateVal, kills: killsVal, won: wonVal });
+          await saveToSupabase(state.store);
+          setFeedback({ message: "Match saved." });
+          render();
+        };
+      }
+
+      const saveTraining = document.getElementById("saveTraining");
+      if (saveTraining) {
+        saveTraining.onclick = async () => {
+          setFeedback({});
+          const target = ensurePlayer(state.selectedMember);
+          const dateVal = document.getElementById("trDate")?.value || new Date().toISOString().slice(0, 10);
+          const kdVal = Math.max(0, Number(parseFloat(document.getElementById("trKd")?.value || "0").toFixed(2)));
+          const killsVal = Math.max(0, parseInt(document.getElementById("trKills")?.value || "0", 10));
+          target.stats.training.logs = target.stats.training.logs || [];
+          target.stats.training.logs.push({ date: dateVal, kd: kdVal, kills: killsVal });
+          recomputeAvgKd(target);
+          await saveToSupabase(state.store);
+          setFeedback({ message: "Training game saved." });
+          render();
+        };
+      }
+
+      document.querySelectorAll("[data-grange]").forEach(btn => {
+        btn.onclick = () => {
+          state.graphRange = btn.dataset.grange;
+          render();
+        };
+      });
+
+      document.querySelectorAll("[data-gmetric]").forEach(btn => {
+        btn.onclick = () => {
+          state.graphMetric = btn.dataset.gmetric;
+          render();
+        };
+      });
+
+      const switchPlayerBtn = document.getElementById("switchPlayerBtn");
+      if (switchPlayerBtn) {
+        switchPlayerBtn.onclick = () => {
+          state.forceLogin = true;
+          setFeedback({});
+          render();
+        };
+      }
+
+      const toggleChangePwd = document.getElementById("toggleChangePwd");
+      if (toggleChangePwd) {
+        toggleChangePwd.onclick = () => {
+          state.showChangePwd = !state.showChangePwd;
+          render();
+        };
+      }
+
+      const updatePwdBtn = document.getElementById("updatePwdBtn");
+      if (updatePwdBtn) {
+        updatePwdBtn.onclick = async () => {
+          setFeedback({});
+          const oldPwd = document.getElementById("oldPwdInput")?.value || "";
+          const newPwd = document.getElementById("newPwdInput")?.value || "";
+          const player = state.store.players[state.loggedPlayer];
+          if (!(await checkAuth(oldPwd, player.auth))) {
+            setFeedback({ error: "Current password is incorrect." });
+            render();
+            return;
+          }
+          if (newPwd.length < 4) {
+            setFeedback({ error: "New password must be at least 4 characters." });
+            render();
+            return;
+          }
+          player.auth = await makeAuth(newPwd);
+          state.showChangePwd = false;
+          await saveToSupabase(state.store);
+          setFeedback({ message: "Password updated." });
+          render();
+        };
+      }
+    }
+
+    (async function init() {
+      try {
+        state.store = await loadFromSupabase();
+      } catch (err) {
+        state.error = `Could not load from Supabase: ${err.message}`;
+      } finally {
+        state.loading = false;
+        render();
+      }
+    })();
+  </script>
+</body>
+</html>
